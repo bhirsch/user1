@@ -1,0 +1,6 @@
+; $Id $
+name = User 1
+description = Restrict access to user 1. 
+core = 6.x
+version = "6.x-0.0"
+project = "Stars with Stripes"

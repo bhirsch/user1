@@ -1,0 +1,74 @@
+<?php
+// $Id$
+
+/**
+ * @file user1.module
+ *  Restrict access to user 1 to prevent hijacking of permissions. 
+ * 
+*/
+
+/**
+ * Implementation of hook_help()
+ */
+function user1_help($path, $arg) {
+  if ($path == 'admin/help#user1') {
+    $txt = 'See README.txt';
+    $output = t($txt);
+    return $output;
+  }
+}
+
+/**
+* Implementation of hook_menu_alter().
+*/
+function user1_menu_alter(&$items) {
+  $items['user/%user_category/edit']['access callback'] = 'user1_menu_validate';
+  $items['user/%user_category/edit']['access arguments'] = array(1);
+}
+
+/**
+* Callback for menu $items['user/%user_category/edit']
+*/
+function user1_menu_validate($account) {
+  $validate = FALSE;
+  global $user;
+
+  // Only user1 can access user1's user page
+  if ($account->uid == 1 && $user->uid ==1) {
+    $validate = TRUE;
+  } else if ($account->uid != 1 && user_edit_access($account)) {
+    $validate = TRUE; 
+  }
+
+  return $validate;
+}
+
+/**
+ * Implementation of hook_formalter().
+ */
+function user1_form_alter(&$form, $form_state, $form_id) {
+  // forms that expose user 1 to password changes
+  global $user;
+  $frms = array('user_admin_account', 'user_profile_form');
+  if (in_array($form_id, $frms) && $user->uid > 1) {
+    switch ($form_id) {
+      /**
+       * path: admin/user/user
+       * Remove user 1 from user table. 
+       */
+      case 'user_admin_account':
+        unset($form['name'][1]);
+        unset($form['status'][1]);
+        unset($form['roles'][1]);
+        unset($form['member_for'][1]);
+        unset($form['last_access'][1]);
+        unset($form['operations'][1]);
+        unset($form['accounts']['#options'][1]);
+        break;
+      // path: user/%uid/edit
+      case 'user_profile_form':
+        // This case is handled by hook_menu_alter().
+        break;  
+    }
+  }
+}
